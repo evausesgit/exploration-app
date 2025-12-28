@@ -63,9 +63,12 @@ python analyze_companies.py
 
 ## 📖 Documentation
 
-- 📘 **[COMMENCEZ_ICI.md](COMMENCEZ_ICI.md)** - Guide de démarrage complet
-- 📗 **[QUICKSTART_ENTREPRISES.md](QUICKSTART_ENTREPRISES.md)** - Démarrage en 3 minutes
-- 📕 **[GUIDE_ENTREPRISES.md](GUIDE_ENTREPRISES.md)** - Documentation détaillée avec exemples
+- 📘 **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)** - Guide de démarrage complet
+- 📗 **[docs/QUICKSTART.md](docs/QUICKSTART.md)** - Démarrage en 3 minutes
+- 📕 **[docs/GUIDE.md](docs/GUIDE.md)** - Documentation détaillée avec exemples
+- 📊 **[docs/PROJECT_SUMMARY.md](docs/PROJECT_SUMMARY.md)** - Résumé technique du projet
+
+👉 **[Voir toute la documentation](docs/)**
 
 ## 💡 Exemples
 
