@@ -1,0 +1,12 @@
+# Core
+requests>=2.31.0
+python-dotenv>=1.0.0
+loguru>=0.7.0
+
+# Data & Database
+pandas>=2.0.0
+sqlalchemy>=2.0.0
+pyyaml>=6.0
+
+# Development
+pytest>=7.4.0
