@@ -140,6 +140,63 @@ class PappersClient:
         except requests.exceptions.RequestException as e:
             raise PappersAPIError(f"❌ Erreur réseau: {str(e)}")
 
+    @staticmethod
+    def _parse_effectif(effectif_str) -> int:
+        """
+        Parse l'effectif de Pappers (peut être un texte ou un nombre)
+
+        Args:
+            effectif_str: Effectif brut de l'API (ex: "Entre 20 et 49 salariés", "3", etc.)
+
+        Returns:
+            Nombre d'employés (moyenne de la tranche si texte)
+        """
+        if isinstance(effectif_str, int):
+            return effectif_str
+
+        if not effectif_str or effectif_str == '0 salarié':
+            return 0
+
+        effectif_lower = str(effectif_str).lower()
+
+        # Mapping des tranches d'effectif
+        if 'entre 1 et 2' in effectif_lower or '1 ou 2' in effectif_lower:
+            return 2
+        elif 'entre 3 et 5' in effectif_lower or '3 à 5' in effectif_lower:
+            return 4
+        elif 'entre 6 et 9' in effectif_lower or '6 à 9' in effectif_lower:
+            return 8
+        elif 'entre 10 et 19' in effectif_lower or '10 à 19' in effectif_lower:
+            return 15
+        elif 'entre 20 et 49' in effectif_lower or '20 à 49' in effectif_lower:
+            return 35
+        elif 'entre 50 et 99' in effectif_lower or '50 à 99' in effectif_lower:
+            return 75
+        elif 'entre 100 et 199' in effectif_lower or '100 à 199' in effectif_lower:
+            return 150
+        elif 'entre 200 et 249' in effectif_lower or '200 à 249' in effectif_lower:
+            return 225
+        elif 'entre 250 et 499' in effectif_lower or '250 à 499' in effectif_lower:
+            return 375
+        elif 'entre 500 et 999' in effectif_lower or '500 à 999' in effectif_lower:
+            return 750
+        elif 'au moins 1 salarié' in effectif_lower or 'au moins 1' in effectif_lower:
+            return 1
+        elif '2000' in effectif_lower or 'plus de' in effectif_lower:
+            return 2000  # Grande entreprise
+
+        # Tenter d'extraire un nombre
+        try:
+            # Chercher des nombres dans la chaîne
+            import re
+            numbers = re.findall(r'\d+', effectif_lower)
+            if numbers:
+                return int(numbers[0])
+        except:
+            pass
+
+        return 0
+
     def get_entreprise(self, siren: str) -> Dict:
         """
         Récupère les informations complètes d'une entreprise
@@ -165,6 +222,10 @@ class PappersClient:
             'avec_beneficiaires': 'true',
             'avec_comptes': 'true'
         })
+
+        # Normaliser l'effectif en nombre
+        if 'effectif' in data:
+            data['effectif'] = self._parse_effectif(data['effectif'])
 
         return data
 
