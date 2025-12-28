@@ -18,7 +18,8 @@ exploration-app/
 │   ├── GUIDE.md                    # Guide détaillé avec exemples
 │   └── PROJECT_SUMMARY.md          # Résumé technique du projet
 │
-├── 🐍 Scripts Python
+├── 🐍 scripts/                     # Scripts exécutables
+│   ├── README.md                   # Documentation des scripts
 │   ├── demo_companies.py           # Démonstration complète
 │   ├── analyze_companies.py        # Script interactif
 │   ├── test_pappers_connection.py  # Test de connexion API
@@ -85,13 +86,15 @@ exploration-app/
 | `GUIDE.md` | Documentation détaillée, exemples avancés |
 | `PROJECT_SUMMARY.md` | Comprendre l'architecture technique |
 
-### Scripts
+### Scripts (`scripts/`)
 
 | Script | Usage |
 |--------|-------|
 | `demo_companies.py` | **Recommandé** - Démonstration complète automatique |
 | `analyze_companies.py` | Script interactif avec saisie utilisateur |
 | `test_pappers_connection.py` | Tester la connexion API Pappers |
+
+Voir **[scripts/README.md](scripts/README.md)** pour plus de détails.
 
 ## 🚀 Démarrage rapide
 
@@ -106,10 +109,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # 3. Test
-python test_pappers_connection.py
+python scripts/test_pappers_connection.py
 
 # 4. Lancement
-python demo_companies.py
+python scripts/demo_companies.py
 ```
 
 ## 📚 Navigation

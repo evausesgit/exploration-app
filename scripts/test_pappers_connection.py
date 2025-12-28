@@ -3,6 +3,11 @@ Script de test pour vérifier la connexion à l'API Pappers
 """
 
 import os
+import sys
+
+# Ajoute le répertoire parent au path pour les imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from dotenv import load_dotenv
 from src.data.pappers_client import PappersClient, PappersAPIError
 

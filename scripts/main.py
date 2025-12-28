@@ -7,6 +7,12 @@ Usage:
     python main.py --dashboard        # Lance le dashboard
 """
 
+import os
+import sys
+
+# Ajoute le répertoire parent au path pour les imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import argparse
 import yaml
 import time

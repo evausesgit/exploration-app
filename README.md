@@ -48,17 +48,17 @@ Obtenez une clé API gratuite sur : https://www.pappers.fr/api
 
 ```bash
 # Tester la connexion API
-python test_pappers_connection.py
+python scripts/test_pappers_connection.py
 ```
 
 ### 4. Utilisation
 
 ```bash
 # Script de démonstration complet
-python demo_companies.py
+python scripts/demo_companies.py
 
 # Ou script interactif
-python analyze_companies.py
+python scripts/analyze_companies.py
 ```
 
 ## 📖 Documentation
