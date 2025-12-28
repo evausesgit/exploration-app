@@ -60,14 +60,6 @@ htmlcov/
 .coverage
 .coverage.*
 
-# Old structure (kept for reference)
-/scripts/
-/docs/
-/src/
-/data/
-/logs/
-/config/
-/tests/
-/archive/
-STRUCTURE.md
+# Root level
 /venv/
+/.env

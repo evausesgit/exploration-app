@@ -1,3 +1,0 @@
-"""
-Dashboards et visualisations
-"""
