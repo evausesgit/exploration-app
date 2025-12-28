@@ -1,0 +1,3 @@
+"""
+Modules de stratégies de trading
+"""

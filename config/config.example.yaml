@@ -1,0 +1,55 @@
+# Configuration du Crypto Opportunity Scanner
+
+# Exchanges à utiliser
+exchanges:
+  - binance
+  - kraken
+  - coinbase
+  # Autres exchanges supportés: kucoin, bybit, okx, bitfinex, etc.
+
+# Symboles à scanner
+symbols:
+  - BTC/USDT
+  - ETH/USDT
+  - BNB/USDT
+  - SOL/USDT
+  - XRP/USDT
+  - ADA/USDT
+  - AVAX/USDT
+  - DOT/USDT
+  - MATIC/USDT
+  - LINK/USDT
+
+# Paramètres de scan
+scanner:
+  # Profit minimum requis (après fees)
+  min_profit: 0.5  # %
+
+  # Confiance minimum
+  min_confidence: 50  # 0-100
+
+  # Volume minimum 24h en USD
+  min_volume_24h: 1000000  # 1M USD
+
+  # Inclure les frais de retrait dans le calcul
+  include_withdrawal_fee: true
+
+  # Intervalle entre scans (secondes)
+  scan_interval: 60
+
+# Base de données
+database:
+  path: "data/opportunities.db"
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/scanner.log"
+
+# Alertes (future feature)
+alerts:
+  enabled: false
+  min_profit_alert: 2.0  # %
+  # email: your@email.com
+  # telegram_bot_token: ""
+  # telegram_chat_id: ""
