@@ -1,232 +1,202 @@
-# 💰 Crypto Opportunity Scanner
+# 🏢 Exploration App - Analyseur d'Entreprises
 
-Scanner modulaire et intelligent pour **identifier, visualiser et exploiter** des opportunités d'arbitrage crypto entre exchanges.
+Application d'analyse d'entreprises françaises via l'API Pappers. Détection automatique d'insights financiers : croissance, marges élevées, changements de direction.
 
-> **Objectif:** Comprendre les flux financiers crypto et détecter des opportunités profitables en tant que développeur/trader particulier.
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## ✨ Fonctionnalités
+## 🎯 Fonctionnalités
 
-- 🔍 **Scan d'arbitrage en temps réel** entre exchanges (Binance, Kraken, Coinbase, etc.)
-- 📊 **Dashboard interactif** pour visualiser les opportunités
-- 💾 **Stockage historique** pour analyser les patterns
-- 🎯 **Calcul précis** du profit net (incluant tous les fees)
-- 🧩 **Architecture modulaire** pour ajouter vos propres stratégies
-- ⚡ **Scan continu** pour surveillance 24/7
+- 📊 **Analyse financière automatique** : Détection de croissance du CA et marges élevées
+- 👔 **Suivi des dirigeants** : Identification des changements de direction récents
+- 💾 **Stockage SQLite** : Historique de tous les insights détectés
+- 🔍 **Recherche intelligente** : Recherche d'entreprises par nom, secteur, département
+- 📈 **Score de santé financière** : Évaluation automatique basée sur les indicateurs
+- 🤖 **API Pappers** : Accès aux données officielles d'entreprises françaises
 
-## 🚀 Quick Start
+## 🚀 Démarrage rapide
+
+### 1. Installation
 
 ```bash
-# 1. Installation
+# Cloner le repository
+git clone https://github.com/evausesgit/exploration-app.git
+cd exploration-app
+
+# Créer l'environnement virtuel
+python3 -m venv venv
+source venv/bin/activate
+
+# Installer les dépendances
 pip install -r requirements.txt
-
-# 2. Premier scan
-python main.py --scan
-
-# 3. Dashboard visuel
-python main.py --dashboard
 ```
 
-➡️ **Nouveau ?** Consultez [QUICKSTART.md](QUICKSTART.md) pour un guide en 5 minutes
+### 2. Configuration
+
+```bash
+# Copier le fichier de configuration
+cp .env.example .env
+
+# Éditer .env et ajouter votre clé API Pappers
+# PAPPERS_API_KEY=votre_cle_ici
+```
+
+Obtenez une clé API gratuite sur : https://www.pappers.fr/api
+(Plan gratuit : 500 requêtes/mois)
+
+### 3. Test
+
+```bash
+# Tester la connexion API
+python test_pappers_connection.py
+```
+
+### 4. Utilisation
+
+```bash
+# Script de démonstration complet
+python demo_companies.py
+
+# Ou script interactif
+python analyze_companies.py
+```
 
 ## 📖 Documentation
 
-- **[QUICKSTART.md](QUICKSTART.md)** - Démarrage rapide (5 min)
-- **[GUIDE.md](GUIDE.md)** - Guide complet pour apprendre et gagner de l'argent
-- **[config/config.example.yaml](config/config.example.yaml)** - Toutes les options de configuration
+- 📘 **[COMMENCEZ_ICI.md](COMMENCEZ_ICI.md)** - Guide de démarrage complet
+- 📗 **[QUICKSTART_ENTREPRISES.md](QUICKSTART_ENTREPRISES.md)** - Démarrage en 3 minutes
+- 📕 **[GUIDE_ENTREPRISES.md](GUIDE_ENTREPRISES.md)** - Documentation détaillée avec exemples
 
-## 🎯 Modes d'Utilisation
+## 💡 Exemples
 
-### 1. Scan Unique
-Vérifiez rapidement les opportunités actuelles :
-```bash
-python main.py --scan
-```
-
-### 2. Scan Continu
-Surveillez en continu et accumulez des données :
-```bash
-python main.py --watch
-```
-
-### 3. Dashboard
-Analysez visuellement les opportunités :
-```bash
-python main.py --dashboard
-```
-
-## 🏗️ Architecture
-
-Le projet est **100% modulaire** pour faciliter l'extension :
-
-```
-src/
-├── core/              # Framework de base
-│   ├── scanner_base.py      # Classe abstraite pour scanners
-│   ├── opportunity.py       # Modèle de données
-│   └── exchange_manager.py  # Gestion des exchanges
-├── strategies/        # Modules de stratégies
-│   └── arbitrage/          # Arbitrage crypto
-│       └── crypto_arbitrage.py
-├── data/             # Stockage et persistence
-│   └── storage.py
-└── visualization/    # Dashboard Streamlit
-    └── dashboard.py
-```
-
-## 📊 Stratégies Disponibles
-
-### ✅ Arbitrage Crypto (Implémenté)
-Détecte les différences de prix entre exchanges.
-
-**Calcule :**
-- Spread brut entre exchanges
-- Frais de trading (maker/taker)
-- Frais de retrait estimés
-- Profit NET exploitable
-
-**Exemple de détection :**
-```
-BTC/USDT: 0.75% profit
-├─ Achat: Binance @ $50,000
-├─ Vente: Kraken @ $50,400
-├─ Spread: 0.80%
-├─ Fees: -0.05%
-└─ Profit NET: 0.75%
-```
-
-### 🔜 Stratégies Futures
-
-Ajoutez facilement vos propres stratégies :
-- **Triangular Arbitrage** : BTC → ETH → USDT → BTC
-- **Funding Rate Arbitrage** : Long spot + Short perpetual
-- **Mean Reversion** : Détection de sur/sous-évaluation
-- **Momentum Trading** : Tendances fortes
-- **Liquidation Sniping** : Cascades de liquidations
-
-## 🎓 Pour les Débutants
-
-**Vous avez peu de connaissances financières ?** Parfait ! Ce projet est fait pour :
-
-1. **APPRENDRE** : Observer où sont les vrais flux financiers
-2. **COMPRENDRE** : Identifier ce qui est exploitable
-3. **TESTER** : Valider avec de petites sommes
-4. **GAGNER** : Scaler progressivement ce qui marche
-
-➡️ Lisez le [GUIDE.md](GUIDE.md) pour un plan d'action détaillé
-
-## 📈 Exemple de Workflow
-
-```bash
-# Semaine 1-2 : Observer
-python main.py --watch  # Laissez tourner 24-48h
-
-# Analyser les données
-python main.py --dashboard
-
-# Identifier les meilleurs symboles et exchanges
-# → Affiner config/config.yaml
-
-# Semaine 3+ : Tester manuellement
-# → Exécuter 1-2 arbitrages avec 100€
-# → Mesurer profit réel vs théorique
-
-# Mois 2+ : Automatiser si profitable
-# → Ajouter auto-execution via API
-```
-
-## 🛠️ Personnalisation
-
-### Modifier la Configuration
-
-Éditez `config/config.yaml` :
-
-```yaml
-exchanges:
-  - binance
-  - kraken
-  - coinbase
-
-symbols:
-  - BTC/USDT
-  - ETH/USDT
-
-scanner:
-  min_profit: 0.5          # Profit minimum requis (%)
-  min_confidence: 50       # Score de confiance minimum
-  min_volume_24h: 1000000  # Volume minimum en USD
-```
-
-### Ajouter une Stratégie
+### Analyser une liste d'entreprises
 
 ```python
-# src/strategies/ma_strategie/scanner.py
-from src.core.scanner_base import ScannerBase
-from src.core.opportunity import Opportunity, OpportunityType
+from src.strategies.companies import CompanyAnalyzer
 
-class MaStrategieScanner(ScannerBase):
-    def get_name(self) -> str:
-        return "Ma Stratégie Personnalisée"
+config = {
+    'siren_list': ['552032534', '542051180'],  # DANONE, L'ORÉAL
+    'min_growth_rate': 10,  # Croissance minimum 10%
+    'min_margin': 5,        # Marge minimum 5%
+}
 
-    def scan(self) -> List[Opportunity]:
-        opportunities = []
-        # Votre logique ici
-        return opportunities
+analyzer = CompanyAnalyzer(config)
+insights = analyzer.run_scan()
+
+for insight in insights:
+    print(f"{insight.data['denomination']}: {insight.metadata['message']}")
 ```
 
-## ⚠️ Disclaimer Important
+### Rechercher et analyser
 
-- Ce projet est **éducatif**
-- Le trading comporte des **risques de perte**
-- **Testez** avec de petites sommes d'abord
-- Pas de garantie de profit
-- Respectez les régulations locales
+```python
+from src.data.pappers_client import PappersClient
 
-**Vous êtes seul responsable de vos décisions de trading.**
+client = PappersClient()
 
-## 🧪 Tests
+# Recherche
+companies = client.recherche("carrefour", max_results=10)
 
-```bash
-# Lancer les tests
-pytest tests/ -v
-
-# Test rapide
-python tests/test_scanner.py
+# Détails d'une entreprise
+data = client.get_entreprise("552032534")
+print(f"{data['nom_entreprise']} - CA: {data['finances'][0]['chiffre_affaires']:,.0f}€")
 ```
 
-## 📦 Dépendances Principales
+## 🔍 Types d'insights détectés
 
-- **ccxt** : API unifiée pour exchanges crypto
-- **streamlit** : Dashboard interactif
-- **pandas / plotly** : Analyse et visualisation
-- **loguru** : Logging avancé
+| Type | Description | Critères |
+|------|-------------|----------|
+| **FINANCIAL_GROWTH** | Croissance forte du CA | Croissance ≥ 10% |
+| **HIGH_MARGIN** | Marges élevées | Marge nette ≥ 5% |
+| **MANAGEMENT_CHANGE** | Nouveaux dirigeants | Prise de poste < 6 mois |
 
-## 🗺️ Roadmap
+## 📊 Architecture
 
-- [x] Architecture modulaire
-- [x] Scanner arbitrage crypto
-- [x] Dashboard de visualisation
-- [x] Stockage historique SQLite
-- [ ] Scanner triangular arbitrage
-- [ ] Scanner funding rate arbitrage
-- [ ] Auto-execution via API
-- [ ] Système d'alertes (Telegram/Email)
-- [ ] Backtesting engine
-- [ ] Mobile app (React Native)
+```
+exploration-app/
+├── src/
+│   ├── core/                  # Classes de base
+│   │   ├── scanner_base.py    # Scanner abstrait
+│   │   └── opportunity.py     # Modèle d'insight
+│   ├── data/
+│   │   ├── pappers_client.py  # Client API Pappers
+│   │   └── storage.py         # Stockage SQLite
+│   └── strategies/
+│       ├── companies/         # Analyse d'entreprises ⭐
+│       │   └── company_analyzer.py
+│       └── arbitrage/         # Analyse crypto (legacy)
+│
+├── demo_companies.py          # Script de démonstration
+├── analyze_companies.py       # Script interactif
+└── test_pappers_connection.py # Test API
+```
+
+## 🛠️ Technologies
+
+- **Python 3.9+**
+- **API Pappers** - Données d'entreprises françaises
+- **SQLite** - Stockage local
+- **Loguru** - Logging avancé
+- **Requests** - Client HTTP
+
+## 📝 Exemples de résultats
+
+```
+📊 Analyse de 3 grandes entreprises françaises...
+
+✅ 4 insights détectés:
+
+1. DANONE
+   └─ Type: financial_growth
+   └─ Croissance de 47.4% du CA
+   └─ Confiance: 74/100
+
+2. DANONE
+   └─ Type: high_margin
+   └─ Marge nette de 57.5%
+   └─ Confiance: 100/100
+
+3. TOTALENERGIES SE
+   └─ Type: financial_growth
+   └─ Croissance de 924887.7% du CA
+   └─ Confiance: 100/100
+```
+
+## 🔒 Sécurité
+
+- ✅ Clés API protégées dans `.env` (non versionné)
+- ✅ Rate limiting automatique
+- ✅ Gestion d'erreurs robuste
+- ✅ Validation des entrées
 
 ## 🤝 Contribution
 
 Les contributions sont bienvenues ! N'hésitez pas à :
-- Signaler des bugs
-- Proposer des nouvelles stratégies
-- Améliorer la documentation
-- Partager vos résultats (anonymisés)
 
-## 📜 License
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/amelioration`)
+3. Commiter vos changements (`git commit -m 'Add: nouvelle fonctionnalité'`)
+4. Pusher (`git push origin feature/amelioration`)
+5. Ouvrir une Pull Request
 
-MIT License - Utilisez librement pour apprendre et gagner de l'argent légalement.
+## 📄 Licence
+
+MIT License - Voir [LICENSE](LICENSE) pour plus de détails
+
+## ⚠️ Avertissement
+
+Cette application est à but éducatif et d'analyse. Vérifiez toujours les données avant toute utilisation professionnelle. Les données proviennent de l'API Pappers et peuvent être incomplètes pour certaines entreprises.
+
+## 🔗 Liens utiles
+
+- **API Pappers** : https://www.pappers.fr/api
+- **Documentation API** : https://www.pappers.fr/api/documentation
+- **Support** : [Issues GitHub](https://github.com/evausesgit/exploration-app/issues)
+
+## ✨ Crédits
+
+Développé avec l'aide de [Claude Code](https://claude.com/claude-code)
 
 ---
 
-**Fait par des développeurs, pour des développeurs qui veulent comprendre la finance.** 💪
-
-Questions ? Consultez le [GUIDE.md](GUIDE.md) ou ouvrez une issue !
+**Made with ❤️ for French company analysis**
