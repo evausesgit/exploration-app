@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script pour lancer le scan continu en arrière-plan
-# Usage: ./run_continuous_scan.sh
+# Usage: ./scripts/run_continuous_scan.sh (depuis la racine du projet)
 
 echo "🚀 Starting Continuous Crypto Arbitrage Scanner..."
 echo "=================================================="
@@ -24,7 +24,9 @@ echo ""
 mkdir -p data logs
 
 # Lancer le scan continu en arrière-plan
-nohup python3.9 main.py --watch > logs/continuous_scan.log 2>&1 &
+# Se déplace à la racine du projet pour exécuter
+cd "$(dirname "$0")/.."
+nohup python3.9 scripts/main.py --watch > logs/continuous_scan.log 2>&1 &
 
 # Sauvegarder le PID
 PID=$!
@@ -39,6 +41,6 @@ echo "Commands:"
 echo "   - View live logs: tail -f logs/continuous_scan.log"
 echo "   - View scanner logs: tail -f logs/scanner.log"
 echo "   - Stop scanner: kill $PID"
-echo "   - Analyze results: python3.9 analyze_opportunities.py"
+echo "   - Analyze results: python3.9 scripts/analyze_opportunities.py"
 echo ""
 echo "🎯 Happy hunting for opportunities! 💰"

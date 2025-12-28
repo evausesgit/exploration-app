@@ -51,6 +51,15 @@ Scanner d'arbitrage crypto (ancien système).
 ### `analyze_opportunities.py`
 Analyse des opportunités crypto sauvegardées.
 
+### `run_continuous_scan.sh`
+Lance le scanner crypto en continu en arrière-plan.
+
+**Usage** :
+```bash
+# Depuis la racine du projet
+./scripts/run_continuous_scan.sh
+```
+
 ## 🚀 Démarrage rapide
 
 ```bash
