@@ -63,3 +63,18 @@ htmlcov/
 # Root level
 /venv/
 /.env
+
+# Node.js / Next.js
+web/node_modules/
+web/.next/
+web/out/
+web/.env.local
+web/.env.development.local
+web/.env.test.local
+web/.env.production.local
+
+# Vercel
+.vercel
+
+# EXCEPTION: Keep web data for Vercel deployment
+!web/public/data/automation_opportunities.json

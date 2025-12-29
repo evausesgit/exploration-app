@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd web && npm install && npm run build",
+  "outputDirectory": "web/out",
+  "devCommand": "cd web && npm run dev",
+  "installCommand": "cd web && npm install",
+  "framework": null,
+  "regions": ["cdg1"]
+}

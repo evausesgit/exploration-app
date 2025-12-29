@@ -274,6 +274,16 @@ def main():
 
     logger.info("\n✅ Scan terminé avec succès")
 
+    # Synchroniser vers l'application web pour Vercel
+    if all_opportunities:
+        logger.info("\n🌐 Synchronisation vers l'application web...")
+        import subprocess
+        sync_script = os.path.join(os.path.dirname(__file__), 'sync_to_web.py')
+        try:
+            subprocess.run([sys.executable, sync_script], check=True)
+        except Exception as e:
+            logger.warning(f"⚠️  Synchronisation web échouée: {e}")
+
 
 if __name__ == '__main__':
     main()

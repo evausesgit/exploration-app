@@ -36,6 +36,18 @@ python scripts/main.py
 
 ---
 
+### 🌐 [Application Web](web/)
+
+Interface web pour visualiser les résultats d'exploration.
+
+**Déployée sur Vercel** : https://exploration-app.vercel.app/
+
+Les résultats du scanner d'automatisation IA sont automatiquement synchronisés et déployés.
+
+👉 **[Voir la documentation](web/README.md)**
+
+---
+
 ## 📁 Structure du projet
 
 Chaque exploration contient :

@@ -20,7 +20,7 @@ class PappersCache:
     de consommer inutilement les crédits API
     """
 
-    def __init__(self, cache_dir: str = "data", cache_ttl_days: int = 30):
+    def __init__(self, cache_dir: str = "data", cache_ttl_days: int = 30000):
         """
         Initialise le cache
 
@@ -78,11 +78,14 @@ class PappersCache:
             Données de l'entreprise si en cache et valide, None sinon
         """
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT data, fetched_at
                 FROM entreprises
                 WHERE siren = ?
-            """, (siren,))
+            """,
+                (siren,),
+            )
 
             row = cursor.fetchone()
 
@@ -115,15 +118,20 @@ class PappersCache:
         data_json = json.dumps(data, ensure_ascii=False)
 
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO entreprises (siren, data, updated_at)
                 VALUES (?, ?, CURRENT_TIMESTAMP)
-            """, (siren, data_json))
+            """,
+                (siren, data_json),
+            )
             conn.commit()
 
         logger.debug(f"Cached data for SIREN {siren}")
 
-    def get_recherche(self, query: str, departement: Optional[str] = None) -> Optional[Dict]:
+    def get_recherche(
+        self, query: str, departement: Optional[str] = None
+    ) -> Optional[Dict]:
         """
         Récupère les résultats d'une recherche du cache
 
@@ -137,11 +145,14 @@ class PappersCache:
         dept = departement or ""
 
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT data, fetched_at
                 FROM recherches
                 WHERE query = ? AND departement = ?
-            """, (query, dept))
+            """,
+                (query, dept),
+            )
 
             row = cursor.fetchone()
 
@@ -155,10 +166,13 @@ class PappersCache:
                     return json.loads(data_json)
                 else:
                     logger.debug(f"Cache EXPIRED for recherche '{query}'")
-                    conn.execute("""
+                    conn.execute(
+                        """
                         DELETE FROM recherches
                         WHERE query = ? AND departement = ?
-                    """, (query, dept))
+                    """,
+                        (query, dept),
+                    )
                     conn.commit()
             else:
                 logger.debug(f"Cache MISS for recherche '{query}'")
@@ -178,10 +192,13 @@ class PappersCache:
         data_json = json.dumps(data, ensure_ascii=False)
 
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO recherches (query, departement, data, fetched_at)
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            """, (query, dept, data_json))
+            """,
+                (query, dept, data_json),
+            )
             conn.commit()
 
         logger.debug(f"Cached recherche '{query}'")
@@ -203,9 +220,9 @@ class PappersCache:
             ).fetchone()[0]
 
             return {
-                'entreprises': entreprises_count,
-                'recherches': recherches_count,
-                'cache_path': str(self.db_path)
+                "entreprises": entreprises_count,
+                "recherches": recherches_count,
+                "cache_path": str(self.db_path),
             }
 
     def clear_expired(self):
@@ -213,16 +230,22 @@ class PappersCache:
         expiration_date = (datetime.now() - self.cache_ttl).isoformat()
 
         with sqlite3.connect(self.db_path) as conn:
-            deleted_entreprises = conn.execute("""
+            deleted_entreprises = conn.execute(
+                """
                 DELETE FROM entreprises
                 WHERE fetched_at < ?
-            """, (expiration_date,)).rowcount
+            """,
+                (expiration_date,),
+            ).rowcount
 
             recherche_expiration = (datetime.now() - timedelta(days=7)).isoformat()
-            deleted_recherches = conn.execute("""
+            deleted_recherches = conn.execute(
+                """
                 DELETE FROM recherches
                 WHERE fetched_at < ?
-            """, (recherche_expiration,)).rowcount
+            """,
+                (recherche_expiration,),
+            ).rowcount
 
             conn.commit()
 
