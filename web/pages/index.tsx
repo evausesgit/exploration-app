@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import Head from 'next/head'
 import ScoringConfig from '../components/ScoringConfig'
-import { recalculateAllScores } from '../utils/scoringEngine'
+import ScoreBreakdownModal from '../components/ScoreBreakdownModal'
+import {
+  calculateScoreWithBreakdown,
+  recalculateAllScores,
+  ScoreBreakdown
+} from '../utils/scoringEngine_new'
 
 interface Opportunity {
   rank: number
@@ -75,6 +80,9 @@ export default function Home() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentCriteria, setCurrentCriteria] = useState<ScoringCriteria | null>(null)
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null)
+  const [showBreakdownModal, setShowBreakdownModal] = useState(false)
 
   useEffect(() => {
     fetch('/data/automation_opportunities.json')
@@ -82,6 +90,7 @@ export default function Home() {
       .then(data => {
         setOriginalData(data)
         setOpportunities(data.opportunities)
+        setCurrentCriteria(data.metadata.scoring_config.criteria)
         setLoading(false)
       })
       .catch(err => {
@@ -94,7 +103,39 @@ export default function Home() {
     if (originalData) {
       const recalculated = recalculateAllScores(originalData.opportunities, newCriteria)
       setOpportunities(recalculated)
+      setCurrentCriteria(newCriteria)
     }
+  }
+
+  const handleOpenBreakdown = (opp: Opportunity) => {
+    setSelectedOpportunity(opp)
+    setShowBreakdownModal(true)
+  }
+
+  const handleSaveBreakdown = (editedBreakdown: ScoreBreakdown) => {
+    if (!selectedOpportunity) return
+
+    // Update the opportunity with the new score
+    const updatedOpportunities = opportunities.map(opp => {
+      if (opp.siren === selectedOpportunity.siren) {
+        return {
+          ...opp,
+          automation_score: editedBreakdown.total
+        }
+      }
+      return opp
+    })
+
+    // Re-sort and re-rank based on new scores
+    const sorted = updatedOpportunities
+      .sort((a, b) => b.automation_score - a.automation_score)
+      .map((opp, index) => ({
+        ...opp,
+        rank: index + 1
+      }))
+
+    setOpportunities(sorted)
+    setShowBreakdownModal(false)
   }
 
   if (loading) {
@@ -213,7 +254,11 @@ export default function Home() {
                         <div className="text-xs text-gray-400 mt-1">SIREN: {opp.siren}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
+                        <button
+                          onClick={() => handleOpenBreakdown(opp)}
+                          className="flex items-center hover:opacity-80 transition-opacity group"
+                          title="Cliquez pour voir le détail du score"
+                        >
                           <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                             <div
                               className={`h-2 rounded-full ${
@@ -223,8 +268,13 @@ export default function Home() {
                               style={{ width: `${opp.automation_score}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">{opp.automation_score}</span>
-                        </div>
+                          <span className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600">
+                            {opp.automation_score}
+                          </span>
+                          <svg className="ml-1 w-4 h-4 text-gray-400 group-hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatCurrency(opp.ca)}
@@ -263,6 +313,17 @@ export default function Home() {
             <p className="mt-2">Secteurs ciblés : {originalData.metadata.config.secteurs.join(', ')}</p>
           </div>
         </div>
+
+        {/* Score Breakdown Modal */}
+        {selectedOpportunity && currentCriteria && (
+          <ScoreBreakdownModal
+            isOpen={showBreakdownModal}
+            onClose={() => setShowBreakdownModal(false)}
+            companyName={selectedOpportunity.denomination}
+            initialBreakdown={calculateScoreWithBreakdown(selectedOpportunity, currentCriteria)}
+            onSave={handleSaveBreakdown}
+          />
+        )}
       </main>
     </>
   )
