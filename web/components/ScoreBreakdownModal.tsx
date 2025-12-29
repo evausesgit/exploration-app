@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ScoreBreakdown } from '../utils/scoringEngine_new'
+import { ScoreBreakdown } from '../utils/scoringEngine'
 
 interface ScoreBreakdownModalProps {
   isOpen: boolean

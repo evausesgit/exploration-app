@@ -6,7 +6,7 @@ import {
   calculateScoreWithBreakdown,
   recalculateAllScores,
   ScoreBreakdown
-} from '../utils/scoringEngine_new'
+} from '../utils/scoringEngine'
 
 interface Opportunity {
   rank: number
