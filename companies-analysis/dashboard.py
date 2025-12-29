@@ -15,8 +15,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dotenv import load_dotenv
 from loguru import logger
+import json
+from pathlib import Path
+from datetime import datetime
 
 from src.strategies.ai_automation_scanner import AIAutomationScanner, SECTEURS_PRIORITAIRES
+from src.core.opportunity import Opportunity, OpportunityType
 
 # Configuration de la page
 st.set_page_config(
@@ -28,9 +32,75 @@ st.set_page_config(
 # Charger les variables d'environnement
 load_dotenv()
 
+
+def load_latest_scan() -> list:
+    """
+    Charge les résultats du dernier scan depuis le fichier JSON
+
+    Returns:
+        Liste d'objets Opportunity
+    """
+    json_file = Path("data/automation_opportunities.json")
+
+    if not json_file.exists():
+        return []
+
+    try:
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        opportunities = []
+        for opp_data in data.get('opportunities', []):
+            # Reconstruire l'objet Opportunity
+            opp = Opportunity(
+                opportunity_type=OpportunityType.UNDERVALUED,
+                symbol=opp_data['siren'],
+                strategy="AIAutomationScanner",
+                profit_potential=opp_data['ca_per_employee'] / 1000,
+                confidence=opp_data['automation_score'],
+                data={
+                    'denomination': opp_data['denomination'],
+                    'siren': opp_data['siren'],
+                    'ca': opp_data['ca'],
+                    'effectif': opp_data['effectif'],
+                    'ca_per_employee': opp_data['ca_per_employee'],
+                    'resultat': opp_data['resultat'],
+                    'marge': opp_data['marge_pct'],
+                    'activite': opp_data['activite'],
+                    'objet_social': opp_data['objet_social'],
+                    'secteur_hint': opp_data['secteur'],
+                    'automation_score': opp_data['automation_score'],
+                    'date_creation': opp_data['date_creation'],
+                    'ville': opp_data['ville'],
+                    'code_postal': opp_data['code_postal']
+                },
+                metadata={
+                    'type': 'ai_automation',
+                    'message': f"CA/salarié: {opp_data['ca_per_employee']:,.0f}€ | Score IA: {opp_data['automation_score']:.0f}/100"
+                }
+            )
+            opportunities.append(opp)
+
+        return opportunities
+    except Exception as e:
+        logger.error(f"Erreur lors du chargement du scan: {e}")
+        return []
+
+
 # Titre principal
 st.title("🤖 Scanner d'opportunités d'automatisation IA")
 st.markdown("Identifie les entreprises françaises à fort potentiel d'automatisation")
+
+# Charger automatiquement le dernier scan au démarrage
+if 'opportunities' not in st.session_state:
+    latest_opportunities = load_latest_scan()
+    st.session_state.opportunities = latest_opportunities
+
+    if latest_opportunities:
+        # Afficher une info sur le chargement automatique
+        json_file = Path("data/automation_opportunities.json")
+        scan_date = datetime.fromtimestamp(json_file.stat().st_mtime)
+        st.info(f"📂 Dernier scan chargé automatiquement ({len(latest_opportunities)} opportunités) - Date: {scan_date.strftime('%d/%m/%Y %H:%M')}")
 
 # Sidebar - Configuration
 st.sidebar.header("⚙️ Configuration")

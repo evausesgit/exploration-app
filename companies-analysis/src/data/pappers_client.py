@@ -9,6 +9,7 @@ import requests
 from typing import Dict, List, Optional, Any
 from loguru import logger
 from datetime import datetime
+from .pappers_cache import PappersCache
 
 
 class PappersAPIError(Exception):
@@ -29,12 +30,13 @@ class PappersClient:
 
     BASE_URL = "https://api.pappers.fr/v2"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, use_cache: bool = True):
         """
         Initialise le client Pappers
 
         Args:
             api_key: Clé API Pappers (ou via env var PAPPERS_API_KEY)
+            use_cache: Activer le cache SQLite (défaut: True, fortement recommandé pour économiser les crédits)
         """
         self.api_key = api_key or os.getenv('PAPPERS_API_KEY')
 
@@ -53,7 +55,15 @@ class PappersClient:
         self.last_request_time = 0
         self.min_request_interval = 0.2  # 5 req/sec max
 
-        logger.info("PappersClient initialized")
+        # Cache SQLite pour économiser les crédits API
+        self.use_cache = use_cache
+        self.cache = PappersCache() if use_cache else None
+
+        if self.use_cache:
+            stats = self.cache.get_stats()
+            logger.info(f"PappersClient initialized with cache ({stats['entreprises']} entreprises cached)")
+        else:
+            logger.info("PappersClient initialized WITHOUT cache (not recommended)")
 
     def _wait_for_rate_limit(self):
         """Attend pour respecter le rate limiting"""
@@ -207,12 +217,23 @@ class PappersClient:
         Returns:
             Dict contenant toutes les données de l'entreprise
         """
-        logger.info(f"Fetching data for SIREN: {siren}")
-
         # Validation SIREN
         siren = siren.replace(' ', '')
         if not siren.isdigit() or len(siren) != 9:
             raise ValueError(f"SIREN invalide: {siren} (doit être 9 chiffres)")
+
+        # Vérifier le cache d'abord
+        if self.use_cache:
+            cached_data = self.cache.get_entreprise(siren)
+            if cached_data:
+                logger.info(f"💾 Cache HIT for SIREN {siren} (économie de 1 crédit API)")
+                # Normaliser l'effectif en nombre
+                if 'effectif' in cached_data:
+                    cached_data['effectif'] = self._parse_effectif(cached_data['effectif'])
+                return cached_data
+
+        # Si pas en cache, faire la requête API
+        logger.info(f"🌐 Fetching from API for SIREN: {siren} (consomme 1 crédit)")
 
         data = self._make_request('entreprise', {
             'siren': siren,
@@ -222,6 +243,11 @@ class PappersClient:
             'avec_beneficiaires': 'true',
             'avec_comptes': 'true'
         })
+
+        # Stocker dans le cache
+        if self.use_cache:
+            self.cache.set_entreprise(siren, data)
+            logger.debug(f"💾 Cached data for SIREN {siren}")
 
         # Normaliser l'effectif en nombre
         if 'effectif' in data:
@@ -305,6 +331,15 @@ class PappersClient:
         Returns:
             Liste d'entreprises trouvées
         """
+        # Vérifier le cache d'abord (uniquement pour recherches simples sans code_naf)
+        if self.use_cache and not code_naf:
+            cached_results = self.cache.get_recherche(query, departement)
+            if cached_results:
+                resultats = cached_results.get('resultats', [])
+                logger.info(f"💾 Cache HIT for recherche '{query}' ({len(resultats)} résultats)")
+                return resultats[:max_results]
+
+        # Si pas en cache, faire la requête API
         params = {
             'q': query,
             'nombre': max_results
@@ -315,9 +350,14 @@ class PappersClient:
         if code_naf:
             params['code_naf'] = code_naf
 
-        logger.info(f"Searching companies: '{query}'")
+        logger.info(f"🌐 Searching companies from API: '{query}' (consomme des crédits)")
 
         data = self._make_request('recherche', params)
+
+        # Stocker dans le cache (uniquement si pas de code_naf pour simplifier)
+        if self.use_cache and not code_naf:
+            self.cache.set_recherche(query, data, departement)
+            logger.debug(f"💾 Cached recherche '{query}'")
 
         resultats = data.get('resultats', [])
 
