@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import Head from 'next/head'
-import ScoringConfig from '../components/ScoringConfig'
-import { recalculateAllScores } from '../utils/scoringEngine'
 
 interface Opportunity {
   rank: number
@@ -19,31 +17,6 @@ interface Opportunity {
   date_creation: string
   ville: string
   code_postal: string
-  immobilisations: number
-}
-
-interface ScoringCriteria {
-  ca_per_employee: {
-    enabled: boolean
-    weight: number
-    thresholds: Array<{value: number, points: number}>
-  }
-  sector: {
-    enabled: boolean
-    weight: number
-    points_per_match: number
-    bonus_threshold: number
-  }
-  profitability: {
-    enabled: boolean
-    weight: number
-    thresholds: Array<{value: number, points: number}>
-  }
-  low_assets: {
-    enabled: boolean
-    weight: number
-    thresholds: Array<{ratio: number, points: number}>
-  }
 }
 
 interface ScanData {
@@ -63,16 +36,12 @@ interface ScanData {
       avg_ca_per_employee: number
       total_ca: number
     }
-    scoring_config: {
-      criteria: ScoringCriteria
-    }
   }
   opportunities: Opportunity[]
 }
 
 export default function Home() {
-  const [originalData, setOriginalData] = useState<ScanData | null>(null)
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
+  const [data, setData] = useState<ScanData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -80,8 +49,7 @@ export default function Home() {
     fetch('/data/automation_opportunities.json')
       .then(res => res.json())
       .then(data => {
-        setOriginalData(data)
-        setOpportunities(data.opportunities)
+        setData(data)
         setLoading(false)
       })
       .catch(err => {
@@ -89,13 +57,6 @@ export default function Home() {
         setLoading(false)
       })
   }, [])
-
-  const handleConfigChange = (newCriteria: ScoringCriteria) => {
-    if (originalData) {
-      const recalculated = recalculateAllScores(originalData.opportunities, newCriteria)
-      setOpportunities(recalculated)
-    }
-  }
 
   if (loading) {
     return (
@@ -108,7 +69,7 @@ export default function Home() {
     )
   }
 
-  if (error || !originalData) {
+  if (error || !data) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
@@ -126,10 +87,6 @@ export default function Home() {
     const date = new Date(dateStr)
     return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
-
-  const avgScore = opportunities.reduce((sum, opp) => sum + opp.automation_score, 0) / opportunities.length
-  const avgCaPerEmployee = opportunities.reduce((sum, opp) => sum + opp.ca_per_employee, 0) / opportunities.length
-  const totalCa = opportunities.reduce((sum, opp) => sum + opp.ca, 0)
 
   return (
     <>
@@ -151,33 +108,27 @@ export default function Home() {
               Entreprises françaises à fort potentiel d'automatisation
             </p>
             <div className="mt-4 text-sm text-gray-500">
-              Dernière mise à jour : {formatDate(originalData.metadata.scan_date)}
+              Dernière mise à jour : {formatDate(data.metadata.scan_date)}
             </div>
           </div>
-
-          {/* Scoring Configuration */}
-          <ScoringConfig
-            defaultConfig={originalData.metadata.scoring_config}
-            onConfigChange={handleConfigChange}
-          />
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="text-sm font-medium text-gray-500 mb-2">Opportunités détectées</div>
-              <div className="text-3xl font-bold text-indigo-600">{opportunities.length}</div>
+              <div className="text-3xl font-bold text-indigo-600">{data.metadata.total_opportunities}</div>
             </div>
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="text-sm font-medium text-gray-500 mb-2">Score moyen</div>
-              <div className="text-3xl font-bold text-indigo-600">{avgScore.toFixed(1)}<span className="text-lg">/100</span></div>
+              <div className="text-3xl font-bold text-indigo-600">{data.metadata.statistics.avg_score.toFixed(1)}<span className="text-lg">/100</span></div>
             </div>
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="text-sm font-medium text-gray-500 mb-2">CA/salarié moyen</div>
-              <div className="text-3xl font-bold text-indigo-600">{formatCurrency(avgCaPerEmployee)}</div>
+              <div className="text-3xl font-bold text-indigo-600">{formatCurrency(data.metadata.statistics.avg_ca_per_employee)}</div>
             </div>
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="text-sm font-medium text-gray-500 mb-2">CA total cumulé</div>
-              <div className="text-3xl font-bold text-indigo-600">{(totalCa / 1e6).toFixed(1)}M€</div>
+              <div className="text-3xl font-bold text-indigo-600">{(data.metadata.statistics.total_ca / 1e6).toFixed(1)}M€</div>
             </div>
           </div>
 
@@ -198,7 +149,7 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {opportunities.map((opp) => (
+                  {data.opportunities.map((opp) => (
                     <tr key={opp.siren} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -259,8 +210,8 @@ export default function Home() {
 
           {/* Footer */}
           <div className="mt-8 text-center text-sm text-gray-500">
-            <p>Critères de scan : CA min {formatCurrency(originalData.metadata.config.min_ca)}, Effectif max {originalData.metadata.config.max_effectif}, Score min {originalData.metadata.config.min_score}/100</p>
-            <p className="mt-2">Secteurs ciblés : {originalData.metadata.config.secteurs.join(', ')}</p>
+            <p>Critères de scan : CA min {formatCurrency(data.metadata.config.min_ca)}, Effectif max {data.metadata.config.max_effectif}, Score min {data.metadata.config.min_score}/100</p>
+            <p className="mt-2">Secteurs ciblés : {data.metadata.config.secteurs.join(', ')}</p>
           </div>
         </div>
       </main>

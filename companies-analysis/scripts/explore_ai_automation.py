@@ -209,6 +209,49 @@ def main():
                         'avg_score': avg_score,
                         'avg_ca_per_employee': avg_ca_per_employee,
                         'total_ca': total_ca
+                    },
+                    'scoring_config': {
+                        'criteria': {
+                            'ca_per_employee': {
+                                'enabled': True,
+                                'weight': 40,
+                                'thresholds': [
+                                    {'value': 500000, 'points': 40},
+                                    {'value': 300000, 'points': 35},
+                                    {'value': 200000, 'points': 30},
+                                    {'value': 150000, 'points': 25},
+                                    {'value': 100000, 'points': 20},
+                                    {'value': 0, 'points': 10}
+                                ]
+                            },
+                            'sector': {
+                                'enabled': True,
+                                'weight': 30,
+                                'points_per_match': 10,
+                                'bonus_threshold': 3
+                            },
+                            'profitability': {
+                                'enabled': True,
+                                'weight': 15,
+                                'thresholds': [
+                                    {'value': 30, 'points': 15},
+                                    {'value': 20, 'points': 12},
+                                    {'value': 10, 'points': 9},
+                                    {'value': 5, 'points': 6},
+                                    {'value': 0, 'points': 3}
+                                ]
+                            },
+                            'low_assets': {
+                                'enabled': True,
+                                'weight': 15,
+                                'thresholds': [
+                                    {'ratio': 0, 'points': 15},
+                                    {'ratio': 0.1, 'points': 12},
+                                    {'ratio': 0.3, 'points': 8},
+                                    {'ratio': 1, 'points': 3}
+                                ]
+                            }
+                        }
                     }
                 },
                 'opportunities': [
@@ -227,7 +270,9 @@ def main():
                         'objet_social': opp.data['objet_social'],
                         'date_creation': opp.data['date_creation'],
                         'ville': opp.data['ville'],
-                        'code_postal': opp.data['code_postal']
+                        'code_postal': opp.data['code_postal'],
+                        # Données brutes pour recalcul du score
+                        'immobilisations': opp.data.get('immobilisations', 0)
                     }
                     for i, opp in enumerate(all_opportunities)
                 ]

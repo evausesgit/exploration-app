@@ -295,6 +295,9 @@ class AIAutomationScanner(ScannerBase):
 
         marge = (resultat / ca * 100) if ca > 0 else 0
 
+        # Récupérer les immobilisations pour le recalcul du score
+        immobilisations = data.get('finances', [{}])[0].get('immobilisations', 0) or 0
+
         opportunity = Opportunity(
             opportunity_type=OpportunityType.UNDERVALUED,  # Utilisé pour "high automation potential"
             symbol=siren,
@@ -315,7 +318,9 @@ class AIAutomationScanner(ScannerBase):
                 'automation_score': score,
                 'date_creation': date_creation,
                 'ville': data.get('siege', {}).get('ville', 'N/A'),
-                'code_postal': data.get('siege', {}).get('code_postal', 'N/A')
+                'code_postal': data.get('siege', {}).get('code_postal', 'N/A'),
+                # Données brutes pour recalcul du score
+                'immobilisations': immobilisations
             },
             metadata={
                 'type': 'ai_automation',

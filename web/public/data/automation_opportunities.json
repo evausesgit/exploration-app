@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "scan_date": "2025-12-29T07:26:26.573682",
+    "scan_date": "2025-12-29T08:14:16.803881",
     "total_opportunities": 3,
     "config": {
       "secteurs": [
@@ -16,6 +16,94 @@
       "avg_score": 83.66666666666667,
       "avg_ca_per_employee": 207021.93333333335,
       "total_ca": 21737303
+    },
+    "scoring_config": {
+      "criteria": {
+        "ca_per_employee": {
+          "enabled": true,
+          "weight": 40,
+          "thresholds": [
+            {
+              "value": 500000,
+              "points": 40
+            },
+            {
+              "value": 300000,
+              "points": 35
+            },
+            {
+              "value": 200000,
+              "points": 30
+            },
+            {
+              "value": 150000,
+              "points": 25
+            },
+            {
+              "value": 100000,
+              "points": 20
+            },
+            {
+              "value": 0,
+              "points": 10
+            }
+          ]
+        },
+        "sector": {
+          "enabled": true,
+          "weight": 30,
+          "points_per_match": 10,
+          "bonus_threshold": 3
+        },
+        "profitability": {
+          "enabled": true,
+          "weight": 15,
+          "thresholds": [
+            {
+              "value": 30,
+              "points": 15
+            },
+            {
+              "value": 20,
+              "points": 12
+            },
+            {
+              "value": 10,
+              "points": 9
+            },
+            {
+              "value": 5,
+              "points": 6
+            },
+            {
+              "value": 0,
+              "points": 3
+            }
+          ]
+        },
+        "low_assets": {
+          "enabled": true,
+          "weight": 15,
+          "thresholds": [
+            {
+              "ratio": 0,
+              "points": 15
+            },
+            {
+              "ratio": 0.1,
+              "points": 12
+            },
+            {
+              "ratio": 0.3,
+              "points": 8
+            },
+            {
+              "ratio": 1,
+              "points": 3
+            }
+          ]
+        }
+      }
     }
   },
   "opportunities": [
@@ -34,7 +122,8 @@
       "objet_social": "transaction sur immeubles et fonds de commerce. conseil en investissements financiers, conseil pour la gestion et les affaires, conseil en gestion de patrimoine, démarchage bancaire et financier, acti",
       "date_creation": "",
       "ville": "LYON",
-      "code_postal": "69003"
+      "code_postal": "69003",
+      "immobilisations": 0
     },
     {
       "rank": 2,
@@ -51,7 +140,8 @@
       "objet_social": "conseil pour les affaires et autres conseils de gestion",
       "date_creation": "",
       "ville": "BAGNEUX",
-      "code_postal": "92220"
+      "code_postal": "92220",
+      "immobilisations": 0
     },
     {
       "rank": 3,
@@ -68,7 +158,8 @@
       "objet_social": "les prestations de conseil en informatique, l'intégration de systèmes, l'assistance à la maîtrise d'ouvrage, la formation",
       "date_creation": "",
       "ville": "LABEGE",
-      "code_postal": "31670"
+      "code_postal": "31670",
+      "immobilisations": 0
     }
   ]
 }
