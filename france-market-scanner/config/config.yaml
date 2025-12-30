@@ -1,0 +1,56 @@
+# France Market Scanner Configuration
+
+database:
+  path: data/france_companies.duckdb
+  memory_limit: 4GB
+  threads: 4
+
+logging:
+  level: INFO
+  file: logs/scanner.log
+  format: "{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
+
+downloads:
+  directory: data/downloads
+  retry_attempts: 3
+  timeout_seconds: 300
+  chunk_size: 8192  # bytes
+
+# SIRENE (INSEE) - French company registry
+sirene:
+  base_url: https://files.data.gouv.fr/insee-sirene/
+  stock_url: https://www.data.gouv.fr/fr/datasets/r/0651fb76-bcf3-4f6a-a38d-bc04fa708576
+  files:
+    unites_legales: StockUniteLegale_utf8.zip
+    etablissements: StockEtablissement_utf8.zip
+  # Alternative: Parquet format (smaller, faster)
+  parquet_base_url: https://object.files.data.gouv.fr/data-pipeline-open/siren/stock/
+  parquet_files:
+    unites_legales: StockUniteLegale_utf8.parquet
+    etablissements: StockEtablissement_utf8.parquet
+  batch_size: 100000
+
+# INPI - Annual accounts (requires free account)
+inpi:
+  api_base: https://data.inpi.fr/api
+  # SFTP for bulk downloads
+  sftp_host: opendata-rncs.inpi.fr
+  sftp_port: 22
+  base_path: /public/IMR_Donnees_Saisies/tc/flux/
+  years_to_sync:
+    - 2020
+    - 2021
+    - 2022
+    - 2023
+    - 2024
+
+# BODACC - Legal announcements
+bodacc:
+  api_base: https://bodacc-datadila.opendatasoft.com/api/v2
+  dataset: annonces-commerciales
+  page_size: 100
+  # Bulletin types: A (sales/insolvency), B (modifications), C (account deposits)
+  bulletin_types:
+    - A
+    - B
+    - C
