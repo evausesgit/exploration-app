@@ -75,6 +75,13 @@ def main():
         help="Âge minimum de l'entreprise en années (défaut: 2)"
     )
 
+    parser.add_argument(
+        '--min-marge',
+        type=float,
+        default=0,
+        help="Marge minimum en pourcentage (défaut: 0, désactivé)"
+    )
+
     # Filtres de résultats
     parser.add_argument(
         '--min-score',
@@ -120,7 +127,8 @@ def main():
         'min_ca': args.min_ca,
         'max_effectif': args.max_effectif,
         'min_ca_per_employee': args.min_ca_per_employee,
-        'min_age_years': args.min_age_years
+        'min_age_years': args.min_age_years,
+        'min_marge': args.min_marge
     }
 
     logger.info("=" * 60)
@@ -131,6 +139,8 @@ def main():
     logger.info(f"CA min: {args.min_ca:,}€")
     logger.info(f"Effectif max: {args.max_effectif}")
     logger.info(f"CA/salarié min: {args.min_ca_per_employee:,}€")
+    if args.min_marge > 0:
+        logger.info(f"Marge min: {args.min_marge}%")
     logger.info(f"Score min: {args.min_score}/100")
     logger.info("=" * 60)
 
@@ -203,6 +213,7 @@ def main():
                         'min_ca': args.min_ca,
                         'max_effectif': args.max_effectif,
                         'min_ca_per_employee': args.min_ca_per_employee,
+                        'min_marge': args.min_marge,
                         'min_score': args.min_score
                     },
                     'statistics': {

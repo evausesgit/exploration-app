@@ -1,21 +1,29 @@
 {
   "metadata": {
-    "scan_date": "2025-12-29T08:14:16.803881",
-    "total_opportunities": 3,
+    "scan_date": "2026-01-06T19:31:02.610599",
+    "total_opportunities": 9,
     "config": {
       "secteurs": [
-        "conseil"
+        "conseil",
+        "marketing_digital",
+        "saas_tech",
+        "formation",
+        "courtage_intermediation",
+        "services_rh",
+        "services_financiers",
+        "services_juridiques"
       ],
       "departements": null,
-      "min_ca": 1000000,
+      "min_ca": 0,
       "max_effectif": 50,
-      "min_ca_per_employee": 150000,
-      "min_score": 55
+      "min_ca_per_employee": 100000,
+      "min_marge": 0.0,
+      "min_score": 0
     },
     "statistics": {
-      "avg_score": 83.66666666666667,
-      "avg_ca_per_employee": 207021.93333333335,
-      "total_ca": 21737303
+      "avg_score": 77.11111111111111,
+      "avg_ca_per_employee": 27501268.984391533,
+      "total_ca": 296416453
     },
     "scoring_config": {
       "criteria": {
@@ -109,6 +117,24 @@
   "opportunities": [
     {
       "rank": 1,
+      "denomination": "ROCKET MARKETING",
+      "siren": "791012131",
+      "automation_score": 91.0,
+      "ca": 16860491,
+      "effectif": 35,
+      "ca_per_employee": 481728.3142857143,
+      "resultat": 2821949,
+      "marge_pct": 16.737051133327018,
+      "secteur": "marketing_digital",
+      "activite": "conseil en systèmes et logiciels informatiques",
+      "objet_social": "une activité de régie publicitaire, de prestations de services en matière de communication et de publicité. la création, la vente et la distribution d'objets publicitaires.",
+      "date_creation": "",
+      "ville": "MONTREUIL",
+      "code_postal": "93100",
+      "immobilisations": 0
+    },
+    {
+      "rank": 2,
       "denomination": "ALIQUIS CONSEIL SAS",
       "siren": "343277505",
       "automation_score": 89.0,
@@ -126,7 +152,7 @@
       "immobilisations": 0
     },
     {
-      "rank": 2,
+      "rank": 3,
       "denomination": "BARRIERE CONSEIL",
       "siren": "832363865",
       "automation_score": 87.0,
@@ -144,7 +170,43 @@
       "immobilisations": 0
     },
     {
-      "rank": 3,
+      "rank": 4,
+      "denomination": "SERVICES MARKETING DIVERSIFIES",
+      "siren": "337934483",
+      "automation_score": 78.0,
+      "ca": 227904749,
+      "effectif": 1,
+      "ca_per_employee": 227904749.0,
+      "resultat": 6835869,
+      "marge_pct": 2.9994412270891293,
+      "secteur": "marketing_digital",
+      "activite": "activités des agences de publicité",
+      "objet_social": "agence de publicité et de marketing relationnel",
+      "date_creation": "",
+      "ville": "PARIS",
+      "code_postal": "75008",
+      "immobilisations": 0
+    },
+    {
+      "rank": 5,
+      "denomination": "AG RECRUTEMENT",
+      "siren": "528244387",
+      "automation_score": 78.0,
+      "ca": 17969545,
+      "effectif": 1,
+      "ca_per_employee": 17969545.0,
+      "resultat": 72203,
+      "marge_pct": 0.40180761393791553,
+      "secteur": "services_rh",
+      "activite": "activités des agences de travail temporaire",
+      "objet_social": "agence de travail temporaire, le recrutement de personnel pour le compte d'autrui",
+      "date_creation": "",
+      "ville": "AUXERRE",
+      "code_postal": "89000",
+      "immobilisations": 0
+    },
+    {
+      "rank": 6,
       "denomination": "SCASSI CONSEIL",
       "siren": "481204691",
       "automation_score": 75.0,
@@ -159,6 +221,60 @@
       "date_creation": "",
       "ville": "LABEGE",
       "code_postal": "31670",
+      "immobilisations": 0
+    },
+    {
+      "rank": 7,
+      "denomination": "IP-FORMATION",
+      "siren": "420793705",
+      "automation_score": 70.0,
+      "ca": 8161959,
+      "effectif": 35,
+      "ca_per_employee": 233198.82857142857,
+      "resultat": 28742,
+      "marge_pct": 0.35214585125948317,
+      "secteur": "formation",
+      "activite": "formation continue d'adultes",
+      "objet_social": "prestations de services informatique vente de matériel informatique création de sites internet formation",
+      "date_creation": "",
+      "ville": "PARIS",
+      "code_postal": "75012",
+      "immobilisations": 0
+    },
+    {
+      "rank": 8,
+      "denomination": "CHEVREUSE COURTAGE",
+      "siren": "438722886",
+      "automation_score": 68.0,
+      "ca": 2942860,
+      "effectif": 15,
+      "ca_per_employee": 196190.66666666666,
+      "resultat": 86821,
+      "marge_pct": 2.950225291043407,
+      "secteur": "courtage_intermediation",
+      "activite": "activités des agents et courtiers d'assurances",
+      "objet_social": "courtage et gestion d'assurances et de reassurance",
+      "date_creation": "",
+      "ville": "PARIS",
+      "code_postal": "75008",
+      "immobilisations": 0
+    },
+    {
+      "rank": 9,
+      "denomination": "AISNE COURTAGE",
+      "siren": "791785645",
+      "automation_score": 58.0,
+      "ca": 839546,
+      "effectif": 8,
+      "ca_per_employee": 104943.25,
+      "resultat": 4220,
+      "marge_pct": 0.5026526241563893,
+      "secteur": "courtage_intermediation",
+      "activite": "autres activités auxiliaires de services financiers, hors assurance et caisses de retraite, n.c.a.",
+      "objet_social": "apporteur d'affaire, courtage en crédits, en assurances, apporteur d'affaire en assurances de prêts, de biens, de personnes, d'assurances vie et toutes formes d'assurance, le courtage en opérations de",
+      "date_creation": "",
+      "ville": "LAON",
+      "code_postal": "02000",
       "immobilisations": 0
     }
   ]

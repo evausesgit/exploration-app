@@ -87,6 +87,7 @@ class AIAutomationScanner(ScannerBase):
         - max_effectif: Effectif maximum (défaut: 10)
         - min_ca_per_employee: CA/salarié minimum (défaut: 100000 = 100k€)
         - min_age_years: Âge minimum de l'entreprise en années (défaut: 2)
+        - min_marge: Marge minimum en % (défaut: 0, désactivé)
         - secteurs: Liste de secteurs à cibler (optionnel)
         - departements: Liste de départements à cibler (optionnel)
         """
@@ -105,6 +106,7 @@ class AIAutomationScanner(ScannerBase):
         self.max_effectif = self.config.get('max_effectif', 10)
         self.min_ca_per_employee = self.config.get('min_ca_per_employee', 100000)  # 100k€
         self.min_age_years = self.config.get('min_age_years', 2)
+        self.min_marge = self.config.get('min_marge', 0)  # Marge minimum en %
 
         # Secteurs et zones
         self.secteurs_cibles = self.config.get('secteurs', list(SECTEURS_PRIORITAIRES.keys()))
@@ -259,6 +261,13 @@ class AIAutomationScanner(ScannerBase):
         if resultat is None or resultat < 0:
             logger.debug(f"Excluded {denomination}: negative result")
             return []
+
+        # 5b. Marge minimum (si activé)
+        if self.min_marge > 0:
+            marge = (resultat / ca * 100) if ca > 0 else 0
+            if marge < self.min_marge:
+                logger.debug(f"Excluded {denomination}: marge {marge:.1f}% < {self.min_marge}%")
+                return []
 
         # 6. Âge de l'entreprise
         date_creation = data.get('date_creation_entreprise', '')
