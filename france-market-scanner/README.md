@@ -360,6 +360,198 @@ data/parquet/
 └── bodacc_annonces.parquet         (17MB, 50K announcements)
 ```
 
+## Data Dictionary
+
+### SIRENE - Unités Légales (29M companies, 716MB)
+
+Legal entities registered in France.
+
+| Column | Type | Coverage | Description |
+|--------|------|----------|-------------|
+| `siren` | String | 100% | 9-digit company identifier |
+| `statut_diffusion` | String | 100% | O=public, P=private |
+| `date_creation` | Date | 100% | Company creation date |
+| `sigle` | String | 5% | Company acronym |
+| `denomination` | String | **53%** | Company name (47% are individuals) |
+| `denomination_usuelle_1/2/3` | String | <1% | Alternative names |
+| `prenom` | String | 47% | First name (for individuals) |
+| `nom` | String | 47% | Last name (for individuals) |
+| `categorie_juridique` | String | 100% | Legal form code (5710=SAS, 5499=SARL...) |
+| `activite_principale` | String | **99.9%** | NAF code (industry classification) |
+| `nomenclature_activite` | String | 100% | NAF version (NAFRev2) |
+| `tranche_effectifs` | String | **6%** | Employee bracket - **UNRELIABLE** |
+| `annee_effectifs` | Int | 6% | Year of employee declaration |
+| `caractere_employeur` | String | 35% | O=employer, N=no employees |
+| `categorie_entreprise` | String | **36%** | PME/ETI/GE classification |
+| `annee_categorie_entreprise` | Int | 36% | Year of category |
+| `economie_sociale_solidaire` | String | 3% | O/N - social economy |
+| `societe_mission` | String | <1% | O/N - mission-driven company |
+| `etat_administratif` | String | 100% | A=active (58%), C=closed |
+| `date_cessation` | Date | 42% | Closure date |
+| `date_derniere_mise_a_jour` | DateTime | 100% | Last update |
+| `_loaded_at` | DateTime | 100% | ETL timestamp |
+| `_source_file` | String | 100% | Source file name |
+
+**Key limitations:**
+- 94% have unknown employee count (`tranche_effectifs = 'NN'`)
+- 47% are individuals (no company name, use `prenom`/`nom`)
+- 42% are closed businesses
+
+### SIRENE - Établissements (42M establishments, 1.9GB)
+
+Physical locations/branches of companies.
+
+| Column | Type | Coverage | Description |
+|--------|------|----------|-------------|
+| `siret` | String | 100% | 14-digit establishment ID (siren + nic) |
+| `siren` | String | 100% | Parent company |
+| `nic` | String | 100% | 5-digit establishment number |
+| `statut_diffusion` | String | 100% | O=public, P=private |
+| `date_creation` | Date | 100% | Establishment creation |
+| `denomination_usuelle` | String | 3% | Trade name |
+| `enseigne_1/2/3` | String | **19%** | Shop sign/brand |
+| `activite_principale` | String | **99.9%** | NAF code |
+| `nomenclature_activite` | String | 100% | NAF version |
+| `activite_principale_registre_metiers` | String | 2% | Craft register code |
+| `etablissement_siege` | Bool | 100% | true=headquarters |
+| `tranche_effectifs` | String | **5.5%** | Employee bracket |
+| `annee_effectifs` | Int | 5.5% | Year of employee data |
+| `caractere_employeur` | String | 30% | O=employer |
+| `complement_adresse` | String | 15% | Address complement |
+| `numero_voie` | String | 70% | Street number |
+| `indice_repetition` | String | 2% | B, TER, etc. |
+| `type_voie` | String | 75% | RUE, AVENUE, etc. |
+| `libelle_voie` | String | 80% | Street name |
+| `code_postal` | String | **99.3%** | Postal code |
+| `libelle_commune` | String | 99% | City name |
+| `libelle_commune_etranger` | String | <1% | Foreign city |
+| `code_commune` | String | 99% | INSEE commune code |
+| `code_cedex` | String | 5% | CEDEX code |
+| `libelle_cedex` | String | 5% | CEDEX label |
+| `code_pays_etranger` | String | <1% | Foreign country code |
+| `libelle_pays_etranger` | String | <1% | Foreign country name |
+| `departement` | String | 99% | Department code |
+| `region` | String | 99% | Region code |
+| `etat_administratif` | String | 100% | A=active (40%), F=closed |
+| `date_cessation` | Date | 60% | Closure date |
+| `date_derniere_mise_a_jour` | DateTime | 100% | Last update |
+| `_loaded_at` | DateTime | 100% | ETL timestamp |
+| `_source_file` | String | 100% | Source file |
+
+**Key limitations:**
+- 60% are closed establishments
+- Employee data even worse (5.5% known)
+- Use for address/location data, not employee counts
+
+### INPI - Comptes Annuels (6.6M accounts, 325MB)
+
+Annual financial accounts filed with commercial courts.
+
+| Column | Type | Coverage | Description |
+|--------|------|----------|-------------|
+| `siren` | String | 100% | Company identifier |
+| `date_cloture` | String | 100% | Fiscal year end (YYYY-MM-DD) |
+| `annee_cloture` | Int | 100% | Fiscal year |
+| `duree_exercice` | Int | 95% | Period length in months |
+| `type_comptes` | String | 100% | C=complet, S=simplifié, K=consolidé |
+| `date_depot` | String | 100% | Filing date |
+| `code_greffe` | String | 100% | Court code |
+| `confidentialite` | String | 100% | 1=confidential (**55%**), 0=public |
+| **Balance Sheet - Assets** |
+| `immobilisations_incorporelles` | Float | 20% | Intangible assets |
+| `immobilisations_corporelles` | Float | 20% | Tangible assets |
+| `immobilisations_financieres` | Float | 20% | Financial assets |
+| `actif_immobilise_net` | Float | 20% | Total fixed assets |
+| `stocks` | Float | 15% | Inventory |
+| `creances_clients` | Float | 20% | Accounts receivable |
+| `disponibilites` | Float | 20% | Cash & equivalents |
+| `actif_circulant` | Float | 20% | Current assets |
+| `total_actif` | Float | 22% | Total assets |
+| **Balance Sheet - Liabilities** |
+| `capital_social` | Float | 25% | Share capital |
+| `reserves` | Float | 20% | Retained earnings |
+| `resultat_exercice` | Float | 25% | Net income (same as resultat_net) |
+| `capitaux_propres` | Float | **44%** | Shareholders' equity |
+| `dettes` | Float | 20% | Total debt |
+| `total_passif` | Float | 22% | Total liabilities |
+| **Income Statement** |
+| `chiffre_affaires` | Float | **23%** | Revenue |
+| `charges_personnel` | Float | **23%** | Payroll (salaries + social charges) |
+| `resultat_exploitation` | Float | 20% | Operating income |
+| `resultat_financier` | Float | 15% | Financial result |
+| `resultat_exceptionnel` | Float | 10% | Exceptional items |
+| `resultat_net` | Float | **29%** | Net profit/loss |
+
+**Account types:**
+| Code | Name | Count | Has Revenue |
+|------|------|-------|-------------|
+| C | Complet (full) | 1.5M | 25% |
+| S | Simplifié (simplified) | 700K | 18% |
+| K | Consolidé (consolidated) | 4K | **92%** |
+
+**Key limitations:**
+- **55% file confidential accounts** (no financials visible)
+- Only 23% have visible revenue
+- Small companies hide numbers; large companies are visible
+- Best sector coverage: medical labs, software publishing
+
+### BODACC - Annonces (50K announcements, 17MB)
+
+Legal announcements (company events).
+
+| Column | Type | Coverage | Description |
+|--------|------|----------|-------------|
+| `id` | String | 100% | Announcement ID |
+| `siren` | String | **99.6%** | Company identifier |
+| `numero_annonce` | String | 100% | Announcement number |
+| `date_parution` | Date | 100% | Publication date |
+| `numero_parution` | String | 100% | Publication number |
+| `type_bulletin` | String | 100% | Bulletin type |
+| `famille` | String | 100% | Event type (see below) |
+| `nature` | String | 80% | Event nature |
+| `denomination` | String | **0%** | Company name - **EMPTY** |
+| `forme_juridique` | String | 50% | Legal form |
+| `administration` | String | 30% | Management info |
+| `adresse` | String | 70% | Address |
+| `code_postal` | String | 70% | Postal code |
+| `ville` | String | 70% | City |
+| `activite` | String | 40% | Activity description |
+| `details` | JSON | 80% | Structured details |
+| `type_procedure` | String | 7% | Procedure type (bankruptcy) |
+| `date_jugement` | Date | 7% | Judgment date |
+| `tribunal` | String | 50% | Court name |
+| `date_cloture_exercice` | Date | 40% | Fiscal year end |
+| `type_depot` | String | 40% | Filing type |
+| `contenu_annonce` | String | 80% | Full announcement text |
+| `_loaded_at` | DateTime | 100% | ETL timestamp |
+| `_source_file` | String | 100% | Source file |
+
+**Event types (`famille`):**
+| Type | Count | Description |
+|------|-------|-------------|
+| dpc | 19K | Dépôt des comptes (account filings) |
+| modification | 9K | Company changes |
+| creation | 9K | New companies |
+| radiation | 7K | Company closures |
+| collective | 3K | Bankruptcy proceedings |
+| vente | 681 | Business sales |
+| immatriculation | 714 | Registrations |
+
+**Key limitations:**
+- Only 50K records (small sample)
+- `denomination` is empty - must join with SIRENE
+- Limited to recent announcements
+
+## Data Quality Summary
+
+| Issue | Impact |
+|-------|--------|
+| **77% revenue hidden** | Most INPI filings are confidential |
+| **94% employees unknown** | SIRENE `tranche_effectifs` useless |
+| **55% INPI confidential** | Small companies hide numbers |
+| **BODACC names empty** | Must join with SIRENE for company names |
+| **60% establishments closed** | Filter by `etat_administratif = 'A'` |
+
 ## Tech Stack
 
 - **chdb**: ClickHouse engine for instant SQL on Parquet
