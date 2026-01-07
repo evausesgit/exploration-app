@@ -226,103 +226,76 @@ These aren't real "gems" - they're financial structures with a few HQ staff.
 
 ## Limitations of Payroll-Based Estimates
 
-### The 70K€ Average Varies by Sector
+### The Fundamental Problem: We Can't Find "Small Teams"
 
-| Sector | Real cost/employee | Our 70K estimate | Effect on ratio |
-|--------|-------------------|------------------|-----------------|
-| Tech/Finance/Pharma | 100-120K€ | 70K€ | **Overcounts** employees → ratio looks worse |
-| Retail/Agriculture | 45-55K€ | 70K€ | **Undercounts** employees → ratio looks better |
+**The goal**: Find companies with few employees but high revenue/profit (productive small teams).
 
-**Implication:**
-- High-wage sectors: We might MISS real gems (false negatives)
-- Low-wage sectors: We might see FAKE gems (false positives)
+**The problem**: We don't have real employee counts (SIRENE is 94% unknown).
 
-### Group vs Entity: Why SIRENE and Payroll Don't Match
+**The attempted workaround**: Estimate employees from payroll (`charges_personnel / 70K`).
 
-SIRENE `tranche_effectifs` often counts **all employees in the corporate group**, while INPI `charges_personnel` is only for **that specific legal entity**.
+**Why it doesn't work**: The math cancels out:
 
-Example from our data:
 ```
-SANOFI group structure:
-├── SANOFI SA (parent)         → SIRENE: "11" (10000+ group employees)
-│                              → INPI payroll: 14M€ (~200 HQ staff)
-├── SANOFI CHIMIE (subsidiary) → SIRENE: "21" (part of group count)
-│                              → INPI payroll: 2.8M€ (~40 employees)
-└── SANOFI PASTEUR EUROPE      → SIRENE: "02" (???)
-                               → INPI payroll: 7.3M€ (~104 employees)
+profit_per_employee = profit / (payroll / 70K)
+                    = profit × 70K / payroll
+                    = 70K × (profit / payroll)
 ```
 
-**This isn't stale data - it's different accounting scopes.**
+This is just `profit / payroll` multiplied by a constant. The 70K assumption adds no information - it just changes units.
 
-### Recommended Strategy
+### The Bias Problem
 
-Use **both** data sources depending on context:
+| Company Type | Real Salary | Our 70K Estimate | Result |
+|--------------|-------------|------------------|--------|
+| Low-wage (retail, agriculture) | 50K€ | Undercounts employees | **Looks like a "gem"** ✓ |
+| High-wage (tech, pharma) | 100K€ | Overcounts employees | **Looks mediocre** ✗ |
 
-```python
-# Strategy: Trust SIRENE when available and plausible, else use payroll
+**We're biased toward finding:**
+- Low-wage businesses (not gems, just cheap labor)
+- Capital-intensive businesses (profit from assets, not people)
 
-CASE
-    -- If SIRENE is known AND payroll roughly matches bracket, use SIRENE
-    WHEN tranche_effectifs NOT IN ('NN', '')
-     AND charges_personnel / 70000 BETWEEN bracket_min * 0.3 AND bracket_max * 3
-    THEN sirene_midpoint
+**We MISS actual gems** - tech companies where 5 highly-paid people generate huge profits.
 
-    -- Otherwise fall back to payroll estimate
-    ELSE charges_personnel / 70000
-END as estimated_employees
+### What We Can Actually Measure
+
+Without real employee counts, the only unbiased metrics are:
+
+| Metric | Formula | What it tells you |
+|--------|---------|-------------------|
+| **Profit margin** | `profit / revenue` | Business efficiency |
+| **Profit/payroll** | `profit / charges_personnel` | Return on labor cost |
+| **Revenue** | `chiffre_affaires` | Business scale |
+
+These don't tell you "profit per employee" - they tell you "how profitable is this business relative to its costs".
+
+### When Payroll IS Useful
+
+Payroll-based filtering is still useful for:
+
+1. **Detecting holding companies**: If `profit > revenue`, the company is receiving dividends, not operating
+2. **Filtering out tiny companies**: `payroll > 100K` means at least 1-2 real employees
+3. **Rough size bucketing**: `payroll 500K-2M` roughly means 7-30 employees (±50% error)
+
+### Group vs Entity Mismatch
+
+SIRENE `tranche_effectifs` counts **group employees**, while INPI `charges_personnel` is **entity-only**:
+
+```
+SANOFI group:
+├── SANOFI SA (parent)    → SIRENE: 10000+ (group) | payroll: 14M€ (~200 HQ staff)
+├── SANOFI CHIMIE         → SIRENE: part of group  | payroll: 2.8M€ (~40 employees)
+└── SANOFI PASTEUR EUROPE → SIRENE: "02" (wrong!)  | payroll: 7.3M€ (~104 employees)
 ```
 
-For **standalone companies** (not part of a group), SIRENE is often accurate when declared.
-For **group structures**, payroll-based estimates are more reliable for the specific entity.
+### Bottom Line
 
-### Better Metric: Profit Per Payroll Euro (No Assumptions)
+**To find "small productive teams", you need actual employee counts.** This data doesn't reliably have them.
 
-The "profit per employee" metric requires assuming a cost per employee (70K? 100K?). This introduces circular logic - changing the assumption changes the absolute numbers but not the ranking.
-
-**Better approach**: Use `profit / payroll` directly:
-
-```python
-profit_per_payroll_euro = resultat_net / charges_personnel
-```
-
-This is pure data, no assumptions:
-- **> 0.50** = exceptional (50 cents profit per euro of payroll)
-- **> 0.30** = very good
-- **> 0.15** = good
-
-```python
-import chdb
-
-result = chdb.query("""
-    SELECT
-        i.siren,
-        s.denomination,
-        s.activite_principale as naf,
-        round(i.chiffre_affaires / 1e6, 2) as revenue_M,
-        round(i.charges_personnel / 1e6, 2) as payroll_M,
-        round(i.resultat_net / 1e6, 2) as profit_M,
-
-        -- ACTUAL RATIO - no assumptions
-        round(i.resultat_net / i.charges_personnel, 2) as profit_per_payroll_euro,
-        round(100 * i.resultat_net / i.chiffre_affaires, 1) as margin_pct
-
-    FROM file('data/parquet/inpi_comptes_2022.parquet') i
-    JOIN file('data/parquet/sirene_unites_legales.parquet') s
-        ON i.siren = s.siren
-    WHERE i.charges_personnel > 500000           -- Some scale
-      AND i.resultat_net > 0                     -- Profitable
-      AND i.resultat_net < i.chiffre_affaires   -- Not a holding
-      AND s.activite_principale NOT IN ('70.10Z', '64.20Z', '64.30Z')
-    ORDER BY profit_per_payroll_euro DESC
-    LIMIT 50
-""", 'DataFrame')
-```
-
-If you still want "profit per employee" for intuition, you can convert:
-```
-profit_per_employee = profit_per_payroll_euro × assumed_cost_per_employee
-                    = 0.50 × 70,000 = 35,000€/employee
-```
+What you CAN find:
+- High-margin businesses (`profit / revenue > 15%`)
+- High profit-per-payroll businesses (efficient labor use, but biased toward low-wage sectors)
+- Specific sectors where data is good (medical labs, software publishing)
 
 ## Limitations
 
