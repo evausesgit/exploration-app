@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional
 import httpx
+import duckdb
 from loguru import logger
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
@@ -112,9 +113,282 @@ class BODACCExtractor:
                 json.dump(all_records, f, ensure_ascii=False, indent=2)
 
             downloaded.append(output_file)
-            logger.info(f"Saved to: {output_file}")
+            logger.info(f"Saved JSON to: {output_file}")
+
+            # Also save flattened parquet
+            parquet_file = self._save_parquet(output_file, year)
+            if parquet_file:
+                downloaded.append(parquet_file)
 
         return downloaded
+
+    def _save_parquet(self, json_file: Path, year: Optional[int] = None) -> Optional[Path]:
+        """Convert JSON to flattened Parquet file.
+
+        Automatically flattens nested JSON structures based on the schema.
+
+        Args:
+            json_file: Path to JSON file.
+            year: Year for naming (if available).
+
+        Returns:
+            Path to created Parquet file, or None on error.
+        """
+        try:
+            # Determine output filename
+            if year:
+                parquet_file = json_file.parent / f"bodacc_{year}.parquet"
+            else:
+                parquet_file = json_file.with_suffix(".parquet")
+
+            con = duckdb.connect()
+
+            # Load JSON and get schema
+            con.execute(f"CREATE TABLE raw AS SELECT * FROM read_json_auto('{json_file}')")
+
+            # Build flattening query dynamically
+            select_cols = self._build_flatten_query(con, "raw")
+
+            con.execute(f"CREATE TABLE flattened AS SELECT {select_cols} FROM raw")
+
+            # Export to parquet with compression
+            con.execute(f"COPY flattened TO '{parquet_file}' (FORMAT PARQUET, COMPRESSION ZSTD)")
+
+            row_count = con.execute("SELECT COUNT(*) FROM flattened").fetchone()[0]
+            file_size_mb = parquet_file.stat().st_size / (1024 * 1024)
+
+            logger.info(f"Saved Parquet to: {parquet_file} ({row_count:,} rows, {file_size_mb:.1f} MB)")
+
+            con.close()
+            return parquet_file
+
+        except Exception as e:
+            logger.error(f"Error creating Parquet file: {e}")
+            return None
+
+    def _build_flatten_query(
+        self,
+        con: duckdb.DuckDBPyConnection,
+        table: str,
+        max_depth: int = 4,
+        strip_prefixes: list[str] = None
+    ) -> str:
+        """Build SELECT clause that flattens nested STRUCT columns.
+
+        Args:
+            con: DuckDB connection.
+            table: Table name to inspect.
+            max_depth: Maximum nesting depth to flatten.
+            strip_prefixes: Prefixes to remove from column aliases.
+
+        Returns:
+            SELECT clause string with flattened columns.
+        """
+        if strip_prefixes is None:
+            strip_prefixes = ["record_fields_", "record_"]
+
+        schema = con.execute(f"DESCRIBE {table}").fetchall()
+        columns = []
+
+        for col_name, col_type, *_ in schema:
+            flat_cols = self._flatten_column(col_name, col_type, col_name, max_depth)
+            columns.extend(flat_cols)
+
+        # Strip prefixes from aliases
+        cleaned_columns = []
+        seen_aliases = {}
+
+        for col in columns:
+            if " AS " in col:
+                path, alias = col.rsplit(" AS ", 1)
+                original_alias = alias
+
+                # Strip prefixes
+                for prefix in strip_prefixes:
+                    if alias.startswith(prefix):
+                        alias = alias[len(prefix):]
+
+                # Handle collisions by keeping distinguishing prefix
+                if alias in seen_aliases:
+                    # Use a more specific name for the collision
+                    # Find the shortest unique suffix from original
+                    alias = original_alias.replace("record_fields_", "fields_")
+                    if alias in seen_aliases:
+                        alias = original_alias
+
+                seen_aliases[alias] = True
+                col = f"{path} AS {alias}"
+
+            cleaned_columns.append(col)
+
+        return ", ".join(cleaned_columns)
+
+    def _flatten_column(
+        self,
+        path: str,
+        col_type: str,
+        alias_prefix: str,
+        max_depth: int,
+        current_depth: int = 0
+    ) -> list[str]:
+        """Recursively flatten a column based on its type.
+
+        Preserves parent field names in the alias to prevent collisions.
+
+        Args:
+            path: SQL path to the column (e.g., "record.fields.name").
+            col_type: DuckDB type string.
+            alias_prefix: Prefix for the flattened column alias.
+            max_depth: Maximum depth to recurse.
+            current_depth: Current recursion depth.
+
+        Returns:
+            List of "path AS alias" expressions.
+        """
+        # Skip certain columns that shouldn't be flattened
+        if alias_prefix == "links":
+            return []
+
+        # Handle STRUCT types - flatten their fields
+        if col_type.startswith("STRUCT(") and current_depth < max_depth:
+            # Parse struct fields from type string
+            inner = col_type[7:-1]  # Remove "STRUCT(" and ")"
+            fields = self._parse_struct_fields(inner)
+
+            result = []
+            for field_name, field_type in fields:
+                new_path = f"{path}.{field_name}"
+                # Keep parent prefix to prevent collisions
+                new_alias = f"{alias_prefix}_{field_name}"
+
+                result.extend(self._flatten_column(
+                    new_path, field_type, new_alias, max_depth, current_depth + 1
+                ))
+            return result
+
+        # Handle JSON strings that contain structured data - extract as JSON
+        if "jugement" in alias_prefix.lower() or "acte" in alias_prefix.lower() or "depot" in alias_prefix.lower():
+            if col_type == "VARCHAR" and current_depth < max_depth:
+                # These are JSON strings, try to extract common fields
+                return self._extract_json_fields(path, alias_prefix)
+
+        # Base case: return the column as-is
+        return [f"{path} AS {alias_prefix}"]
+
+    def _extract_json_fields(self, path: str, alias_prefix: str) -> list[str]:
+        """Extract fields from JSON string columns.
+
+        Args:
+            path: SQL path to the JSON column.
+            alias_prefix: Full prefix for extracted field aliases.
+
+        Returns:
+            List of json_extract expressions.
+        """
+        # Determine which JSON field type this is
+        alias_lower = alias_prefix.lower()
+        if "jugement" in alias_lower:
+            field_key = "jugement"
+        elif "acte" in alias_lower:
+            field_key = "acte"
+        elif "depot" in alias_lower:
+            field_key = "depot"
+        else:
+            return [f"{path} AS {alias_prefix}"]
+
+        # Common fields in BODACC JSON columns
+        json_fields = {
+            "jugement": [
+                ("type", "VARCHAR"),
+                ("famille", "VARCHAR"),
+                ("nature", "VARCHAR"),
+                ("date", "DATE"),
+                ("complementJugement", "VARCHAR"),
+            ],
+            "acte": [
+                ("dateImmatriculation", "DATE"),
+                ("dateCommencementActivite", "DATE"),
+                ("creation.categorieCreation", "VARCHAR"),
+            ],
+            "depot": [
+                ("dateCloture", "DATE"),
+                ("typeDepot", "VARCHAR"),
+                ("descriptif", "VARCHAR"),
+            ],
+        }
+
+        result = []
+        fields = json_fields.get(field_key, [])
+
+        for field_path, field_type in fields:
+            json_path = f"$.{field_path}"
+            # Use full prefix to prevent collisions
+            alias = f"{alias_prefix}_{field_path.replace('.', '_')}"
+
+            if field_type == "DATE":
+                result.append(f"TRY_CAST(json_extract_string({path}, '{json_path}') AS DATE) AS {alias}")
+            else:
+                result.append(f"json_extract_string({path}, '{json_path}') AS {alias}")
+
+        return result if result else [f"{path} AS {alias_prefix}"]
+
+    def _parse_struct_fields(self, struct_inner: str) -> list[tuple[str, str]]:
+        """Parse field definitions from a STRUCT type string.
+
+        Args:
+            struct_inner: Inner part of STRUCT(...) type definition.
+
+        Returns:
+            List of (field_name, field_type) tuples.
+        """
+        fields = []
+        depth = 0
+        current_field = ""
+
+        for char in struct_inner:
+            if char == "(" or char == "[":
+                depth += 1
+                current_field += char
+            elif char == ")" or char == "]":
+                depth -= 1
+                current_field += char
+            elif char == "," and depth == 0:
+                field = current_field.strip()
+                if field:
+                    fields.append(self._parse_field_def(field))
+                current_field = ""
+            else:
+                current_field += char
+
+        # Don't forget the last field
+        field = current_field.strip()
+        if field:
+            fields.append(self._parse_field_def(field))
+
+        return fields
+
+    def _parse_field_def(self, field_def: str) -> tuple[str, str]:
+        """Parse a single field definition like 'name VARCHAR' or '"timestamp" TIMESTAMP'.
+
+        Args:
+            field_def: Field definition string.
+
+        Returns:
+            Tuple of (field_name, field_type).
+        """
+        field_def = field_def.strip()
+
+        # Handle quoted field names
+        if field_def.startswith('"'):
+            end_quote = field_def.find('"', 1)
+            name = field_def[1:end_quote]
+            type_str = field_def[end_quote + 1:].strip()
+        else:
+            parts = field_def.split(None, 1)
+            name = parts[0]
+            type_str = parts[1] if len(parts) > 1 else "VARCHAR"
+
+        return (name, type_str)
 
     def load(
         self,
